@@ -1,0 +1,13 @@
+# Dataset (Muito grande para o GitHub)
+tumores/
+*.zip
+dataset_thyroscan_v25/
+
+# Arquivos gerados
+*.pkl
+*.png
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class

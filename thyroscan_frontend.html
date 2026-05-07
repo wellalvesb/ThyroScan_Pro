@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThyroScan Pro V25 — Análise de Nódulo de Tireoide</title>
+    <meta name="description" content="Sistema CAD de apoio à decisão clínica para classificação de nódulos de tireoide em ultrassonografia">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #111640;
+            --bg-card: #161b4a;
+            --bg-card-hover: #1c2260;
+            --accent-primary: #4f6df0;
+            --accent-secondary: #7c3aed;
+            --accent-gradient: linear-gradient(135deg, #4f6df0, #7c3aed);
+            --text-primary: #e8ecf4;
+            --text-secondary: #8b92b0;
+            --text-muted: #5a6180;
+            --border-color: #2a2f5a;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --shadow-glow: 0 0 40px rgba(79, 109, 240, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ─── Ambient Background ─── */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(79,109,240,0.06) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(124,58,237,0.05) 0%, transparent 50%);
+            z-index: 0;
+            animation: ambientMove 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes ambientMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-5%, -3%); }
+        }
+
+        /* ─── Header ─── */
+        .header {
+            position: relative;
+            z-index: 1;
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(20px);
+            background: rgba(10, 14, 39, 0.8);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-logo {
+            width: 44px;
+            height: 44px;
+            background: var(--accent-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 20px rgba(79,109,240,0.3);
+        }
+
+        .header-title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-title span {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-version {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            padding: 4px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+        }
+
+        /* ─── Main Content ─── */
+        .main {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+
+        .hero-text {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .hero-text h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .hero-text p {
+            color: var(--text-secondary);
+            font-size: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* ─── Grid Layout ─── */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+        }
+
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        /* ─── Cards ─── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 28px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .card-icon.upload { background: rgba(79,109,240,0.15); }
+        .card-icon.result { background: rgba(16,185,129,0.15); }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* ─── Upload Zone ─── */
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 16px;
+            padding: 48px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--accent-primary);
+            background: rgba(79,109,240,0.04);
+        }
+
+        .upload-zone .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .upload-zone p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .upload-zone strong {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        .upload-zone input {
+            display: none;
+        }
+
+        /* ─── Preview ─── */
+        .preview-container {
+            display: none;
+            text-align: center;
+        }
+
+        .preview-container.visible {
+            display: block;
+        }
+
+        .preview-img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 16px;
+            object-fit: contain;
+            background: #000;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ─── Buttons ─── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 4px 16px rgba(79,109,240,0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(79,109,240,0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+        }
+
+        /* ─── Result ─── */
+        .result-container {
+            display: none;
+        }
+
+        .result-container.visible {
+            display: block;
+        }
+
+        .result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            border-radius: 14px;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            letter-spacing: -0.3px;
+        }
+
+        .result-badge.benigno {
+            background: rgba(16,185,129,0.12);
+            color: var(--success);
+            border: 1px solid rgba(16,185,129,0.3);
+        }
+
+        .result-badge.maligno {
+            background: rgba(239,68,68,0.12);
+            color: var(--danger);
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+
+        .result-badge.indefinido {
+            background: rgba(245,158,11,0.12);
+            color: var(--warning);
+            border: 1px solid rgba(245,158,11,0.3);
+        }
+
+        /* ─── Probability Bar ─── */
+        .prob-section {
+            margin-bottom: 20px;
+        }
+
+        .prob-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .prob-label span:first-child {
+            color: var(--text-secondary);
+        }
+
+        .prob-label span:last-child {
+            font-weight: 600;
+        }
+
+        .prob-bar {
+            height: 10px;
+            background: var(--bg-secondary);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .prob-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 1s ease;
+        }
+
+        .prob-fill.low { background: var(--success); }
+        .prob-fill.medium { background: var(--warning); }
+        .prob-fill.high { background: var(--danger); }
+
+        /* ─── Clinical Note ─── */
+        .clinical-note {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 16px 20px;
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        .clinical-note strong {
+            color: var(--text-primary);
+        }
+
+        /* ─── Loading ─── */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.visible {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ─── Footer ─── */
+        .footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* ─── Disclaimer ─── */
+        .disclaimer {
+            background: rgba(245,158,11,0.08);
+            border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-top: 32px;
+            font-size: 12px;
+            color: var(--warning);
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        /* ─── Full-width cards ─── */
+        .card-full {
+            grid-column: 1 / -1;
+        }
+
+        .roi-preview {
+            display: none;
+        }
+        .roi-preview.visible {
+            display: block;
+            text-align: center;
+            margin-top: 16px;
+        }
+        .roi-preview img {
+            max-width: 200px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .roi-preview p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header" id="app-header">
+        <div class="header-brand">
+            <div class="header-logo">🔬</div>
+            <h2 class="header-title"><span>ThyroScan</span> Pro</h2>
+        </div>
+        <span class="header-version">V25 — CAD Engine</span>
+    </header>
+
+    <main class="main" id="app-main">
+        <div class="hero-text">
+            <h1>Análise de Nódulo de Tireoide</h1>
+            <p>Sistema de Apoio à Decisão Clínica (CAD) para classificação de nódulos em ultrassonografia — Benigno vs. Maligno — baseado em Visão Computacional e Machine Learning.</p>
+        </div>
+
+        <div class="grid">
+            <!-- Upload Card -->
+            <div class="card" id="upload-card">
+                <div class="card-header">
+                    <div class="card-icon upload">📤</div>
+                    <span class="card-title">Upload de Imagem</span>
+                </div>
+
+                <div class="upload-zone" id="upload-zone">
+                    <span class="icon">🩻</span>
+                    <p>
+                        <strong>Clique para selecionar</strong> ou arraste uma imagem<br>
+                        de ultrassonografia de tireoide<br>
+                        <small style="color:var(--text-muted)">PNG, JPG — Máx 10MB</small>
+                    </p>
+                    <input type="file" id="file-input" accept="image/png,image/jpeg,image/jpg">
+                </div>
+
+                <div class="preview-container" id="preview-container">
+                    <img class="preview-img" id="preview-img" alt="Imagem de ultrassom">
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="btn-analyze" onclick="analisar()">
+                            🧠 Analisar Imagem
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetar()">
+                            ↩️ Nova Imagem
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Card -->
+            <div class="card" id="result-card">
+                <div class="card-header">
+                    <div class="card-icon result">📊</div>
+                    <span class="card-title">Resultado da Análise</span>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="color:var(--text-secondary);font-size:14px;">
+                        Processando imagem...<br>
+                        <small>Isolando nódulo e extraindo biomarcadores TI-RADS</small>
+                    </p>
+                </div>
+
+                <div class="result-container" id="result-container">
+                    <div style="text-align:center;margin-bottom:20px;">
+                        <div class="result-badge" id="result-badge">
+                            <span id="result-icon">✅</span>
+                            <span id="result-text">BENIGNO</span>
+                        </div>
+                    </div>
+
+                    <div class="prob-section">
+                        <div class="prob-label">
+                            <span>Probabilidade de Malignidade</span>
+                            <span id="prob-value">0%</span>
+                        </div>
+                        <div class="prob-bar">
+                            <div class="prob-fill" id="prob-fill" style="width:0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="prob-section">
+                        <div class="prob-label">
+                            <span>Limiar de Decisão (Youden)</span>
+                            <span id="threshold-value">0.500</span>
+                        </div>
+                    </div>
+
+                    <div class="roi-preview" id="roi-preview">
+                        <img id="roi-img" alt="ROI extraída">
+                        <p>🎯 Região de Interesse (ROI) Isolada</p>
+                    </div>
+
+                    <div class="clinical-note" id="clinical-note">
+                        <strong>⚕️ Nota Clínica:</strong><br>
+                        <span id="clinical-text"></span>
+                    </div>
+                </div>
+
+                <!-- Placeholder quando não há resultado -->
+                <div id="result-placeholder" style="text-align:center;padding:40px 0;">
+                    <span style="font-size:48px;display:block;margin-bottom:12px;opacity:0.3;">📊</span>
+                    <p style="color:var(--text-muted);font-size:14px;">
+                        Faça o upload de uma imagem<br>para iniciar a análise
+                    </p>
+                </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="card-full">
+                <div class="disclaimer">
+                    ⚠️ <strong>Aviso Importante:</strong> Este sistema é uma ferramenta de apoio à decisão clínica e
+                    <strong>NÃO substitui</strong> a avaliação de um médico especialista.
+                    Todo resultado deve ser interpretado por um profissional de saúde qualificado.
+                    Se a imagem estiver pendendo para maligno, será necessário realizar biópsia para confirmação.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        ThyroScan Pro V25 — Sistema CAD para Classificação de Nódulos de Tireoide<br>
+        Baseado em OpenCV + scikit-learn | Projeto Acadêmico
+    </footer>
+
+    <script>
+        // ─── Estado da aplicação ──────────────────────────────────────────
+        let imagemCarregada = null;
+        let nomeArquivo = '';
+
+        // ─── Elementos DOM ────────────────────────────────────────────────
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('file-input');
+        const previewContainer = document.getElementById('preview-container');
+        const previewImg = document.getElementById('preview-img');
+        const loading = document.getElementById('loading');
+        const resultContainer = document.getElementById('result-container');
+        const resultPlaceholder = document.getElementById('result-placeholder');
+
+        // ─── Upload Events ────────────────────────────────────────────────
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                processarArquivo(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                processarArquivo(e.target.files[0]);
+            }
+        });
+
+        function processarArquivo(file) {
+            if (!file.type.match('image.*')) {
+                alert('Por favor, selecione uma imagem (PNG ou JPG).');
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                alert('A imagem deve ter no máximo 10MB.');
+                return;
+            }
+
+            nomeArquivo = file.name;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagemCarregada = e.target.result;
+                previewImg.src = imagemCarregada;
+                uploadZone.style.display = 'none';
+                previewContainer.classList.add('visible');
+                resultContainer.classList.remove('visible');
+                resultPlaceholder.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ─── Análise ──────────────────────────────────────────────────────
+        function analisar() {
+            if (!imagemCarregada) return;
+
+            // Mostrar loading
+            resultPlaceholder.style.display = 'none';
+            resultContainer.classList.remove('visible');
+            loading.classList.add('visible');
+            document.getElementById('btn-analyze').disabled = true;
+
+            // Verificar se estamos no Colab (com kernel Python)
+            if (typeof google !== 'undefined' && google.colab) {
+                // Chamar Python via google.colab.kernel
+                google.colab.kernel.invokeFunction(
+                    'thyroscan_classificar', [imagemCarregada], {}
+                ).then(result => {
+                    const data = result.data['application/json'];
+                    mostrarResultado(data);
+                }).catch(err => {
+                    console.error("Erro no Colab:", err);
+                    simularResultado();
+                });
+            } else {
+                // Execução local: Tentar chamar API FastAPI
+                fetch('http://127.0.0.1:8000/api/classificar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ imagem_base64: imagemCarregada })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('API Local não disponível');
+                    return response.json();
+                })
+                .then(data => {
+                    mostrarResultado(data);
+                })
+                .catch(err => {
+                    console.warn("API Local falhou, caindo para simulação:", err);
+                    // Fallback: simulação se o backend não estiver rodando
+                    setTimeout(() => {
+                        simularResultado();
+                    }, 1500);
+                });
+            }
+        }
+
+        function simularResultado() {
+            // Simulação para quando o modelo não está carregado
+            // (execução local sem Python backend)
+            const prob = Math.random() * 0.6 + 0.2;
+            const threshold = 0.45;
+            mostrarResultado({
+                classe: prob >= threshold ? 'MALIGNO' : 'BENIGNO',
+                probabilidade: prob,
+                threshold: threshold,
+                roi_base64: null,
+                simulado: true
+            });
+        }
+
+        function mostrarResultado(data) {
+            loading.classList.remove('visible');
+            resultContainer.classList.add('visible');
+            document.getElementById('btn-analyze').disabled = false;
+
+            const badge = document.getElementById('result-badge');
+            const icon = document.getElementById('result-icon');
+            const text = document.getElementById('result-text');
+            const probValue = document.getElementById('prob-value');
+            const probFill = document.getElementById('prob-fill');
+            const thresholdValue = document.getElementById('threshold-value');
+            const clinicalText = document.getElementById('clinical-text');
+            const roiPreview = document.getElementById('roi-preview');
+
+            const prob = data.probabilidade;
+            const threshold = data.threshold;
+            const classe = data.classe;
+
+            // Atualizar badge
+            badge.className = 'result-badge ' + classe.toLowerCase();
+            if (classe === 'BENIGNO') {
+                icon.textContent = '✅';
+                text.textContent = 'BENIGNO';
+            } else {
+                icon.textContent = '⚠️';
+                text.textContent = 'SUSPEITA DE MALIGNIDADE';
+            }
+
+            // Atualizar probabilidade
+            const probPct = (prob * 100).toFixed(1);
+            probValue.textContent = probPct + '%';
+            probFill.style.width = probPct + '%';
+            probFill.className = 'prob-fill ' + (prob < 0.35 ? 'low' : prob < 0.55 ? 'medium' : 'high');
+
+            // Threshold
+            thresholdValue.textContent = threshold.toFixed(3);
+
+            // ROI
+            if (data.roi_base64) {
+                document.getElementById('roi-img').src = 'data:image/png;base64,' + data.roi_base64;
+                roiPreview.classList.add('visible');
+            } else {
+                roiPreview.classList.remove('visible');
+            }
+
+            // Nota clínica
+            let nota = '';
+            if (classe === 'BENIGNO') {
+                nota = `A análise radiômica indica características predominantemente benignas (probabilidade de malignidade: ${probPct}%). ` +
+                       `Recomenda-se acompanhamento clínico conforme protocolo TI-RADS. ` +
+                       `Este resultado deve ser correlacionado com achados clínicos e laboratoriais pelo médico assistente.`;
+            } else {
+                nota = `A análise radiômica detectou características suspeitas de malignidade (probabilidade: ${probPct}%). ` +
+                       `<strong style="color:var(--danger)">Recomenda-se avaliação médica especializada e consideração de biópsia por PAAF</strong> ` +
+                       `(Punção Aspirativa por Agulha Fina) para confirmação histopatológica. ` +
+                       `A decisão final deve ser tomada pelo médico especialista.`;
+            }
+
+            if (data.simulado) {
+                nota += `<br><br><em style="color:var(--warning);">⚠️ MODO DEMONSTRAÇÃO: O modelo não está carregado. ` +
+                        `Para resultados reais, execute no Google Colab com o modelo treinado.</em>`;
+            }
+
+            clinicalText.innerHTML = nota;
+        }
+
+        function resetar() {
+            imagemCarregada = null;
+            nomeArquivo = '';
+            fileInput.value = '';
+            uploadZone.style.display = 'block';
+            previewContainer.classList.remove('visible');
+            resultContainer.classList.remove('visible');
+            loading.classList.remove('visible');
+            resultPlaceholder.style.display = 'block';
+            document.getElementById('roi-preview').classList.remove('visible');
+        }
+    </script>
+</body>
+</html>
