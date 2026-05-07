@@ -5,7 +5,7 @@ dataset_thyroscan_v25/
 
 # Arquivos gerados
 *.pkl
-*.png
+# *.png
 
 # Python
 __pycache__/
