@@ -59,7 +59,7 @@ graph TD
 Treinar o sistema com o gigantesco dataset do Kaggle (7.695 imagens de dezenas de máquinas de ultrassom diferentes) transformou o ThyroScan num motor resiliente. Ao contrário de modelos criados com poucas imagens que atingem 99% (porque decoraram o dataset), nosso modelo atingiu métricas sólidas de "mundo real".
 
 ![Gráficos de Resultados](thyroscan_v25_resultados.png)
-*(Se a imagem não carregar, certifique-se de baixar o png gerado pelo Colab e colocar nesta mesma pasta!)*
+
 
 ### Interpretando a Matriz de Confusão e a Curva ROC
 
